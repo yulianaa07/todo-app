@@ -369,8 +369,8 @@
     // БАГ: умова фільтрації неправильна — видаляє не ту задачу
     // TODO: fix — замінити  t.id != id - 1  на  t.id !== id
     function deleteTask(id) {
-      tasks = tasks.filter(t => t.id != id - 1); // <- баг тут
-      showToast('❌ Помилка! Задачу не видалено.', true);
+      tasks = tasks.filter(t => t.id !== id);
+      showToast('Задачу видалено ');
       render();
     }
 
