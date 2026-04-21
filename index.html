@@ -299,6 +299,7 @@
     <header>
       <div class="logo">Task<span>Flow</span></div>
       <p class="subtitle">Твій простий менеджер задач</p>
+<p class="env-badge" id="envBadge"></p>
     </header>
 
     
@@ -421,6 +422,11 @@
     });
 
     render();
+const badge = document.getElementById('envBadge');
+if (badge) {
+  badge.textContent = 'Development';
+  badge.style.cssText = 'display:inline-block;padding:3px 12px;border-radius:20px;font-size:0.8rem;background:rgba(200,240,60,0.2);color:#c8f03c;margin-top:4px;';
+}
   </script>
 </body>
 </html>

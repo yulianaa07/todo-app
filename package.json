@@ -4,6 +4,10 @@
   "description": "Простий менеджер задач на HTML/CSS/JS.",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src/**/*.js",
     "test:unit": "vitest run",
     "test:unit:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
@@ -25,8 +29,11 @@
   },
   "homepage": "https://github.com/yulianaa07/todo-app#readme",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.59.1",
     "@vitest/coverage-v8": "^4.1.4",
+    "eslint": "^10.2.1",
+    "vite": "^8.0.9",
     "vitest": "^4.1.4"
   }
 }
