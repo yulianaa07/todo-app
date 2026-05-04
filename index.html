@@ -2,13 +2,33 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-<script>
+
+  <!-- PostHog Analytics -->
+  <script>
     !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys getNextSurveyStep onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
     posthog.init('phc_qe9bvQ2UqsRXzaaTpzd4mD8bhR5Pmtymr9RdWYfW49mo', {
-        api_host: 'https://eu.i.posthog.com',
-        person_profiles: 'always'
+      api_host: 'https://eu.i.posthog.com',
+      person_profiles: 'always'
     });
-</script>
+  </script>
+
+  <!-- Sentry Error Tracking -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    Sentry.init({
+      dsn: "https://866a875427ab18074a009db9ddf337e4@o4511331209379840.ingest.de.sentry.io/4511331717611600",
+      environment: "development",
+      tracesSampleRate: 1.0,
+      sendDefaultPii: true
+    });
+
+    Sentry.setUser({
+      id: "12345",
+      email: "zaytsevayuliana@gmail.com",
+      username: "yulianaa07"
+    });
+  </script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TaskFlow — To-Do App</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -150,6 +170,10 @@
       <button class="filter-btn" onclick="setFilter('done', this)">Виконані</button>
     </div>
 
+    <button class="btn" onclick="throwError()" style="margin-bottom:16px;background:#f03c3c;color:white;">
+      Break the world
+    </button>
+
     <div class="task-list" id="taskList"></div>
   </div>
 
@@ -177,7 +201,6 @@
       input.value = '';
       render();
       showToast('Задачу додано ✓');
-      // PostHog: подія створення задачі
       posthog.capture('task_created', { tag: tag, text: text });
     }
 
@@ -186,21 +209,33 @@
       if (t) {
         t.done = !t.done;
         render();
-        // PostHog: подія завершення задачі
         if (t.done) {
           posthog.capture('task_completed', { tag: t.tag, text: t.text });
         }
       }
     }
 
-    // БАГ: умова фільтрації неправильна — видаляє не ту задачу
-    // TODO: fix — замінити  t.id != id - 1  на  t.id !== id
     function deleteTask(id) {
-      tasks = tasks.filter(t => t.id != id - 1); // <- баг тут
+      tasks = tasks.filter(t => t.id != id - 1);
       showToast('❌ Помилка! Задачу не видалено.', true);
       render();
-      // PostHog: подія спроби видалення задачі (з багом)
+
       posthog.capture('task_deleted', { reason: 'user_action', bug: true });
+
+      Sentry.addBreadcrumb({
+        category: 'ui',
+        message: 'Користувач натиснув кнопку Видалити',
+        level: 'info',
+        data: { task_id: id }
+      });
+      Sentry.captureException(new Error('deleteTask bug: task not deleted correctly'), {
+        tags: { feature: 'delete_button' },
+        extra: { task_id: id, bug: true }
+      });
+    }
+
+    function throwError() {
+      throw new Error('Sentry Test Error: Something went wrong!');
     }
 
     function setFilter(f, btn) {
@@ -214,12 +249,12 @@
       const list = document.getElementById('taskList');
       const visible = tasks.filter(t => {
         if (filter === 'active') return !t.done;
-        if (filter === 'done')   return t.done;
+        if (filter === 'done') return t.done;
         return true;
       });
       document.getElementById('totalCount').textContent = tasks.length;
-      document.getElementById('doneCount').textContent  = tasks.filter(t => t.done).length;
-      document.getElementById('leftCount').textContent  = tasks.filter(t => !t.done).length;
+      document.getElementById('doneCount').textContent = tasks.filter(t => t.done).length;
+      document.getElementById('leftCount').textContent = tasks.filter(t => !t.done).length;
       if (visible.length === 0) {
         list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Задач немає</p></div>`;
         return;
@@ -250,7 +285,6 @@
 
     render();
 
-    // Відображення змінної оточення
     const badge = document.getElementById('envBadge');
     if (badge) {
       badge.textContent = 'Development';
