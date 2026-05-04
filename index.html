@@ -12,14 +12,15 @@
     });
   </script>
 
-  <!-- Sentry Error Tracking + Performance -->
-  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+  <!-- Sentry Error Tracking + Performance Tracing -->
+  <script src="https://browser.sentry-cdn.com/7.99.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
   <script>
     Sentry.init({
       dsn: "https://866a875427ab18074a009db9ddf337e4@o4511331209379840.ingest.de.sentry.io/4511331717611600",
       environment: "development",
       integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 1.0,
+      tracePropagationTargets: ["localhost", /^\//],
       sendDefaultPii: true
     });
 
@@ -33,112 +34,358 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TaskFlow — To-Do App</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg: #0e0e11; --surface: #17171c; --surface2: #1f1f27;
-      --accent: #c8f03c; --accent2: #3cf0a0; --text: #f0f0f0;
-      --muted: #666; --danger: #f03c3c; --border: #2a2a35;
+      --bg: #0e0e11;
+      --surface: #17171c;
+      --surface2: #1f1f27;
+      --accent: #c8f03c;
+      --accent2: #3cf0a0;
+      --text: #f0f0f0;
+      --muted: #666;
+      --danger: #f03c3c;
+      --border: #2a2a35;
     }
+
     body {
-      background: var(--bg); color: var(--text);
-      font-family: 'DM Sans', sans-serif; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; padding: 48px 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px;
     }
+
     body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: radial-gradient(circle at 20% 20%, rgba(200,240,60,0.06) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 80%, rgba(60,240,160,0.05) 0%, transparent 50%);
-      pointer-events: none; z-index: 0;
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(200,240,60,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(60,240,160,0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
-    .container { width: 100%; max-width: 560px; position: relative; z-index: 1; }
-    header { margin-bottom: 40px; }
-    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 2.4rem; letter-spacing: -1px; color: var(--text); }
-    .logo span { color: var(--accent); }
-    .subtitle { color: var(--muted); font-size: 0.9rem; margin-top: 4px; font-weight: 300; }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 40px;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2.4rem;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+      font-weight: 300;
+    }
+
     .input-area {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 20px; margin-bottom: 24px; display: flex; gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 10px;
     }
+
     input[type="text"] {
-      flex: 1; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 16px; color: var(--text);
-      font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    input[type="text"]:focus { border-color: var(--accent); }
-    input[type="text"]::placeholder { color: var(--muted); }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted);
+    }
+
     select {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px 14px; color: var(--text); font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem; outline: none; cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
     }
+
     .btn {
-      border: none; border-radius: 10px; padding: 12px 22px;
-      font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.9rem;
-      cursor: pointer; transition: transform 0.15s, opacity 0.15s; letter-spacing: 0.3px;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 22px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      letter-spacing: 0.3px;
     }
-    .btn:active { transform: scale(0.97); }
-    .btn-add { background: var(--accent); color: #0e0e11; }
-    .btn-add:hover { opacity: 0.9; }
-    .stats { display: flex; gap: 12px; margin-bottom: 20px; }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #0e0e11;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
     .stat-card {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 14px 16px; text-align: center;
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: center;
     }
-    .stat-num { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--accent); }
-    .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-    .filters { display: flex; gap: 8px; margin-bottom: 16px; }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
     .filter-btn {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-      padding: 7px 16px; color: var(--muted); font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 16px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .filter-btn.active { background: var(--accent); color: #0e0e11; border-color: var(--accent); font-weight: 500; }
-    .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #0e0e11;
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .task-item {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 16px 18px; display: flex; align-items: center; gap: 14px;
-      animation: slideIn 0.25s ease; transition: border-color 0.2s;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      animation: slideIn 0.25s ease;
+      transition: border-color 0.2s;
     }
-    .task-item:hover { border-color: #3a3a48; }
-    .task-item.done { opacity: 0.5; }
-    .task-item.done .task-text { text-decoration: line-through; color: var(--muted); }
-    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .task-item:hover {
+      border-color: #3a3a48;
+    }
+
+    .task-item.done {
+      opacity: 0.5;
+    }
+
+    .task-item.done .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .task-check {
-      width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border);
-      background: var(--surface2); cursor: pointer; display: flex; align-items: center;
-      justify-content: center; flex-shrink: 0; transition: all 0.15s;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
     }
-    .task-check.checked { background: var(--accent); border-color: var(--accent); }
-    .task-check.checked::after { content: '✓'; font-size: 13px; color: #0e0e11; font-weight: 700; }
-    .task-text { flex: 1; font-size: 0.95rem; line-height: 1.4; }
-    .task-tag { font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
-    .tag-work { background: rgba(200,240,60,0.15); color: var(--accent); }
-    .tag-personal { background: rgba(60,240,160,0.15); color: var(--accent2); }
-    .tag-other { background: rgba(200,200,255,0.1); color: #aab; }
+
+    .task-check.checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .task-check.checked::after {
+      content: '✓';
+      font-size: 13px;
+      color: #0e0e11;
+      font-weight: 700;
+    }
+
+    .task-text {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .task-tag {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .tag-work {
+      background: rgba(200,240,60,0.15);
+      color: var(--accent);
+    }
+
+    .tag-personal {
+      background: rgba(60,240,160,0.15);
+      color: var(--accent2);
+    }
+
+    .tag-other {
+      background: rgba(200,200,255,0.1);
+      color: #aab;
+    }
+
     .task-delete {
-      background: none; border: 1px solid var(--danger); color: var(--danger);
-      cursor: pointer; font-size: 0.8rem; padding: 5px 10px; border-radius: 8px;
-      transition: all 0.15s; font-family: 'DM Sans', sans-serif; font-weight: 500; position: relative;
+      background: none;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 5px 10px;
+      border-radius: 8px;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      position: relative;
     }
-    .task-delete:hover { background: rgba(240,60,60,0.1); }
+
+    .task-delete:hover {
+      background: rgba(240,60,60,0.1);
+    }
+
     .bug-dot {
-      position: absolute; top: -4px; right: -4px; width: 8px; height: 8px;
-      background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite;
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 8px;
+      height: 8px;
+      background: var(--danger);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
     }
-    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-    .empty-state { text-align: center; padding: 48px 0; color: var(--muted); }
-    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .empty-state p { font-size: 0.9rem; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--muted);
+    }
+
+    .empty-state .icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+    }
+
     .toast {
-      position: fixed; bottom: 32px; left: 50%;
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-      padding: 12px 24px; border-radius: 12px; font-size: 0.9rem;
-      transition: transform 0.3s ease; z-index: 100; white-space: nowrap;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      transition: transform 0.3s ease;
+      z-index: 100;
+      white-space: nowrap;
     }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.error { border-color: var(--danger); color: var(--danger); }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
   </style>
 </head>
 <body>
@@ -160,9 +407,18 @@
     </div>
 
     <div class="stats">
-      <div class="stat-card"><div class="stat-num" id="totalCount">0</div><div class="stat-label">Всього</div></div>
-      <div class="stat-card"><div class="stat-num" id="doneCount">0</div><div class="stat-label">Виконано</div></div>
-      <div class="stat-card"><div class="stat-num" id="leftCount">0</div><div class="stat-label">Залишилось</div></div>
+      <div class="stat-card">
+        <div class="stat-num" id="totalCount">0</div>
+        <div class="stat-label">Всього</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="doneCount">0</div>
+        <div class="stat-label">Виконано</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="leftCount">0</div>
+        <div class="stat-label">Залишилось</div>
+      </div>
     </div>
 
     <div class="filters">
@@ -188,8 +444,9 @@
     let tasks = [
       { id: 1, text: 'Зробити лабораторну роботу з Git', tag: 'work', done: false },
       { id: 2, text: 'Створити репозиторій на GitHub', tag: 'work', done: true },
-      { id: 3, text: 'Написати README.md', tag: 'other', done: false },
+      { id: 3, text: 'Написати README.md', tag: 'other', done: false }
     ];
+
     let filter = 'all';
     let nextId = 4;
 
@@ -197,19 +454,27 @@
       const input = document.getElementById('taskInput');
       const tag = document.getElementById('tagSelect').value;
       const text = input.value.trim();
-      if (!text) { showToast('Введи текст задачі!', true); return; }
+
+      if (!text) {
+        showToast('Введи текст задачі!', true);
+        return;
+      }
+
       tasks.push({ id: nextId++, text, tag, done: false });
       input.value = '';
       render();
       showToast('Задачу додано ✓');
+
       posthog.capture('task_created', { tag: tag, text: text });
     }
 
     function toggleTask(id) {
       const t = tasks.find(t => t.id === id);
+
       if (t) {
         t.done = !t.done;
         render();
+
         if (t.done) {
           posthog.capture('task_completed', { tag: t.tag, text: t.text });
         }
@@ -229,6 +494,7 @@
         level: 'info',
         data: { task_id: id }
       });
+
       Sentry.captureException(new Error('deleteTask bug: task not deleted correctly'), {
         tags: { feature: 'delete_button' },
         extra: { task_id: id, bug: true }
@@ -248,23 +514,29 @@
 
     function render() {
       const list = document.getElementById('taskList');
+
       const visible = tasks.filter(t => {
         if (filter === 'active') return !t.done;
         if (filter === 'done') return t.done;
         return true;
       });
+
       document.getElementById('totalCount').textContent = tasks.length;
       document.getElementById('doneCount').textContent = tasks.filter(t => t.done).length;
       document.getElementById('leftCount').textContent = tasks.filter(t => !t.done).length;
+
       if (visible.length === 0) {
         list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><p>Задач немає</p></div>`;
         return;
       }
+
       list.innerHTML = visible.map(t => `
         <div class="task-item ${t.done ? 'done' : ''}">
           <div class="task-check ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
           <span class="task-text">${t.text}</span>
-          <span class="task-tag tag-${t.tag}">${t.tag === 'work' ? '🏢 Робота' : t.tag === 'personal' ? '🙂 Особисте' : '📌 Інше'}</span>
+          <span class="task-tag tag-${t.tag}">
+            ${t.tag === 'work' ? '🏢 Робота' : t.tag === 'personal' ? '🙂 Особисте' : '📌 Інше'}
+          </span>
           <button class="task-delete" onclick="deleteTask(${t.id})">
             ✕ Видалити
             <span class="bug-dot"></span>
