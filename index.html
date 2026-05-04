@@ -12,12 +12,13 @@
     });
   </script>
 
-  <!-- Sentry Error Tracking -->
+  <!-- Sentry Error Tracking + Performance -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
   <script>
     Sentry.init({
       dsn: "https://866a875427ab18074a009db9ddf337e4@o4511331209379840.ingest.de.sentry.io/4511331717611600",
       environment: "development",
+      integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 1.0,
       sendDefaultPii: true
     });
