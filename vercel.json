@@ -2,16 +2,16 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/ingx7/static/:path*",
-      "destination": "https://eu-assets.i.posthog.com/static/:path*"
+      "source": "/ingx7/static/:path(.*)",
+      "destination": "https://eu-assets.i.posthog.com/static/:path"
     },
     {
-      "source": "/ingx7/array/:path*",
-      "destination": "https://eu-assets.i.posthog.com/array/:path*"
+      "source": "/ingx7/array/:path(.*)",
+      "destination": "https://eu-assets.i.posthog.com/array/:path"
     },
     {
-      "source": "/ingx7/:path*",
-      "destination": "https://eu.i.posthog.com/:path*"
+      "source": "/ingx7/:path(.*)",
+      "destination": "https://eu.i.posthog.com/:path"
     }
   ]
 }
