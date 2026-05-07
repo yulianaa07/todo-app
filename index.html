@@ -19,20 +19,22 @@
   <!-- Sentry Error Tracking + Performance Tracing -->
   <script src="https://browser.sentry-cdn.com/7.99.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
   <script>
-    Sentry.init({
-      dsn: "https://866a875427ab18074a009db9ddf337e4@o4511331209379840.ingest.de.sentry.io/4511331717611600",
-      environment: "development",
-      integrations: [Sentry.browserTracingIntegration()],
-      tracesSampleRate: 1.0,
-      tracePropagationTargets: ["localhost", /^\//],
-      sendDefaultPii: true
-    });
+    if (window.Sentry) {
+      Sentry.init({
+        dsn: "https://866a875427ab18074a009db9ddf337e4@o4511331209379840.ingest.de.sentry.io/4511331717611600",
+        environment: "development",
+        integrations: [Sentry.browserTracingIntegration()],
+        tracesSampleRate: 1.0,
+        tracePropagationTargets: ["localhost", /^\//],
+        sendDefaultPii: true
+      });
 
-    Sentry.setUser({
-      id: "12345",
-      email: "zaytsevayuliana@gmail.com",
-      username: "yulianaa07"
-    });
+      Sentry.setUser({
+        id: "12345",
+        email: "zaytsevayuliana@gmail.com",
+        username: "yulianaa07"
+      });
+    }
   </script>
 
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -93,9 +95,7 @@
       color: var(--text);
     }
 
-    .logo span {
-      color: var(--accent);
-    }
+    .logo span { color: var(--accent); }
 
     .subtitle {
       color: var(--muted);
@@ -127,13 +127,9 @@
       transition: border-color 0.2s;
     }
 
-    input[type="text"]:focus {
-      border-color: var(--accent);
-    }
+    input[type="text"]:focus { border-color: var(--accent); }
 
-    input[type="text"]::placeholder {
-      color: var(--muted);
-    }
+    input[type="text"]::placeholder { color: var(--muted); }
 
     select {
       background: var(--surface2);
@@ -159,18 +155,14 @@
       letter-spacing: 0.3px;
     }
 
-    .btn:active {
-      transform: scale(0.97);
-    }
+    .btn:active { transform: scale(0.97); }
 
     .btn-add {
       background: var(--accent);
       color: #0e0e11;
     }
 
-    .btn-add:hover {
-      opacity: 0.9;
-    }
+    .btn-add:hover { opacity: 0.9; }
 
     .stats {
       display: flex;
@@ -243,13 +235,9 @@
       transition: border-color 0.2s;
     }
 
-    .task-item:hover {
-      border-color: #3a3a48;
-    }
+    .task-item:hover { border-color: #3a3a48; }
 
-    .task-item.done {
-      opacity: 0.5;
-    }
+    .task-item.done { opacity: 0.5; }
 
     .task-item.done .task-text {
       text-decoration: line-through;
@@ -329,9 +317,7 @@
       position: relative;
     }
 
-    .task-delete:hover {
-      background: rgba(240,60,60,0.1);
-    }
+    .task-delete:hover { background: rgba(240,60,60,0.1); }
 
     .bug-dot {
       position: absolute;
@@ -360,9 +346,7 @@
       margin-bottom: 12px;
     }
 
-    .empty-state p {
-      font-size: 0.9rem;
-    }
+    .empty-state p { font-size: 0.9rem; }
 
     .toast {
       position: fixed;
@@ -467,7 +451,7 @@
       render();
       showToast('Задачу додано ✓');
 
-      posthog.capture('task_created', { tag: tag, text: text });
+      posthog.capture('task_created', { tag, text });
     }
 
     function toggleTask(id) {
@@ -484,23 +468,24 @@
     }
 
     function deleteTask(id) {
-      tasks = tasks.filter(t => t.id != id - 1);
-      showToast('❌ Помилка! Задачу не видалено.', true);
+      tasks = tasks.filter(t => t.id !== id);
       render();
 
       posthog.capture('task_deleted', { reason: 'user_action', bug: true });
 
-      Sentry.addBreadcrumb({
-        category: 'ui',
-        message: 'Користувач натиснув кнопку Видалити',
-        level: 'info',
-        data: { task_id: id }
-      });
+      if (window.Sentry) {
+        Sentry.addBreadcrumb({
+          category: 'ui',
+          message: 'Користувач натиснув кнопку Видалити',
+          level: 'info',
+          data: { task_id: id }
+        });
 
-      Sentry.captureException(new Error('deleteTask bug: task not deleted correctly'), {
-        tags: { feature: 'delete_button' },
-        extra: { task_id: id, bug: true }
-      });
+        Sentry.captureException(new Error('deleteTask bug: task not deleted correctly'), {
+          tags: { feature: 'delete_button' },
+          extra: { task_id: id, bug: true }
+        });
+      }
     }
 
     function throwError() {
